@@ -69,6 +69,10 @@ class ASARProblem(Problem):
             # Insert a leg
             elif l[0] == 'L':
                 values = l.split()
+                for i in range(3,2,len(values)):
+                    (classes,prof)=values[i],values[i+1]
+
+
 
                 ## TODO: each aircraft class has different distance cost. Create graph for each class?
                 self.graph.connect(l[1],l[2],distance)
