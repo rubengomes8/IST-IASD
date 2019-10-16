@@ -1,7 +1,5 @@
 import sys
 from search import *
-from utils import *
-
 
 
 class ASARProblem(Problem):
@@ -52,7 +50,7 @@ class ASARProblem(Problem):
 
     def load(self,f):
         """Loads a problem from file f"""
-        for ln in (ln for ln in f.readlines() if ln.split() > 0):
+        for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
             l = ln.split()
 
             # Inserts in airport dict curfews
@@ -69,15 +67,15 @@ class ASARProblem(Problem):
 
             # Insert a leg
             elif l[0] == 'L':
-                values = l.split()
-                for i in range(3,2,len(values)):
-                    (classes,prof)=values[i],values[i+1]
-                    print(classes,prof)
+                for i in range(3, 2, len(l)):
+                    print(i, " ")
+                    (classes,prof)=(l[i], l[i+1])
+                    print(l[i], "\n")
 
 
 
                 ## TODO: each aircraft class has different distance cost. Create graph for each class?
-                self.graph.connect(l[1],l[2],distance)
+                #self.graph.connect(l[1],l[2],distance)
 
             else:
                 raise RuntimeError("Bad Format Error")
@@ -105,7 +103,7 @@ def main():
     if len(sys.argv) > 1:
 
 
-        asar = ASARProblem(initial, goal, graph)
+        asar = ASARProblem(None, None, None)
 
         with open(sys.argv[1]) as f:
             asar.load(f)
