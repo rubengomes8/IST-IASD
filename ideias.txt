@@ -1,0 +1,10 @@
+Transformar as legs numa árvore em que o caminho da root para uma folha percorre todas as legs. 
+
+Fazer procura por todos os caminhos possiveis para cada aviao guardando excertos do caminho e guardar os profits de cada excerto
+
+No final arranjar uma combinação de excertos que valide os horários de todos os aeroportos.
+
+0. construir a arvore (escolha da root?/numero de arvores por aviao=numero de aeroportos, será que é indiferente a escolha da root???)
+1. percorrer a arvore
+2. verificar excertos com os horarios
+3. combinar excertos validos
