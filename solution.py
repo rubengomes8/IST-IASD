@@ -8,7 +8,6 @@ class ASARProblem(Problem):
     airport = {}
     aircraft = {}
     L = {}
-    legs=
     fleet = []
 
     def __init__(self, initial, goal, graph):
