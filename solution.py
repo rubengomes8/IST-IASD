@@ -7,6 +7,8 @@ class ASARProblem(Problem):
 
     airport = {}
     aircraft = {}
+    L = {}
+    legs=
     fleet = []
 
     def __init__(self, initial, goal, graph):
@@ -67,11 +69,13 @@ class ASARProblem(Problem):
 
             # Insert a leg
             elif l[0] == 'L':
-                for i in range(3, 2, len(l)):
-                    print(i, " ")
-                    (classes,prof)=(l[i], l[i+1])
-                    print(l[i], "\n")
-
+                class_prof = []
+                #self.L[(l[1], l[2])] = l[3],l[4]
+                for i in range(4, len(l)-1, 2):
+                    class_prof.append(l[i])
+                    class_prof.append(l[i+1])
+                self.L[(l[1], l[2])]= l[3],class_prof
+                print(self.L)
 
 
                 ## TODO: each aircraft class has different distance cost. Create graph for each class?
