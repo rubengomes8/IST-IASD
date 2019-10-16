@@ -1,5 +1,6 @@
 import sys
 from search import *
+from utils import *
 
 
 
@@ -71,6 +72,7 @@ class ASARProblem(Problem):
                 values = l.split()
                 for i in range(3,2,len(values)):
                     (classes,prof)=values[i],values[i+1]
+                    print(classes,prof)
 
 
 
@@ -87,8 +89,6 @@ class ASARProblem(Problem):
         if state is None:
             f.write("Infeasible")
             return
-
-        else:
 
 class Time:
 
