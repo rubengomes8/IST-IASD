@@ -85,6 +85,15 @@ class ASARProblem(Problem):
 
         else:
 
+class Time:
+
+    def min_to_hour(self, min):
+        return str(min/60 + min%60)
+
+    def hour_to_min(self, hours): #hours in string
+        hour = int(hours[0:1])
+        minutes = int(hours[2:3])
+        return hour*60+minutes
 
 def main():
 
