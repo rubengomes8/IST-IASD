@@ -1,6 +1,6 @@
 import sys
 from search import *
-
+from itertools import product
 
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
@@ -8,6 +8,7 @@ class ASARProblem(Problem):
     airport = {}
     aircraft = {}
     fleet = []
+
 
     def __init__(self):
         Problem.__init__(self, None, None)
@@ -18,7 +19,11 @@ class ASARProblem(Problem):
             An action in this context is defined by a dictionary with actions for each aircraft"""
         action = set()
         if state.aircraft_status is None:
-            # Initial State
+            # Initial State, all of them !airports
+            action = set()
+            possible_states = list(p for p in product(list(self.airport), repeat=len(self.aircraft)))
+            dict_state = {}
+
             # TODO:cobinatoria fdd nao me apetece pensar
             raise NotImplementedError
 
@@ -84,8 +89,8 @@ class ASARProblem(Problem):
             elif l_array[0] == 'L':
                 leg_counter += 1
                 profit = {}
-                for i in range(4, len(l_array)-1, 2):
-                    profit[l_array[i]] = int(l_array[i+1])
+                for i in range(4, len(l_array) - 1, 2):
+                    profit[l_array[i]] = int(l_array[i + 1])
                 self.airport[l_array[1]] = Leg(l_array[2], hour_to_min(l_array[3]), profit)
 
             else:
@@ -106,7 +111,6 @@ class ASARProblem(Problem):
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-
         self.aircraft_status = aircraft_status
         self.remaining_legs = remaining_legs
 
@@ -120,7 +124,6 @@ class Airport:
         self.legs = []
 
     def add_leg_to_airport(self, leg):
-
         self.legs.append(leg)
 
 
@@ -134,27 +137,26 @@ class Leg:
 
     # Returns arrival airport, time of arrival and profit of given leg
     def calculate_route(self, a_class, std):
-
-        return self.arr, std+self.flight_time, self.profit[a_class]
+        return self.arr, std + self.flight_time, self.profit[a_class]
 
 
 # Auxiliary Time functions
 
 def min_to_hour(minute):
-    return str(minute/60 + minute % 60)
+    return str(minute / 60 + minute % 60)
 
 
 def hour_to_min(hours):  # hours in string
     hour = int(hours[0:1])
     minutes = int(hours[2:3])
-    return hour*60+minutes
+    return hour * 60 + minutes
 
 
 def main():
-
     if len(sys.argv) > 1:
 
         asar = ASARProblem()
+        print(asar.airport)
 
         with open(sys.argv[1]) as f:
             asar.load(f)
@@ -162,6 +164,7 @@ def main():
 
     else:
         print("Usage:", sys.argv[0], "<filename>")
+
 
 
 if __name__ == '__main__':
