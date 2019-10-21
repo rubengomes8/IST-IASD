@@ -71,8 +71,10 @@ class ASARProblem(Problem):
     def load(self, f):
         """Loads a problem from file f"""
         leg_counter = 0
+        #print(f.readlines())
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
             l_array = ln.split()
+            print(str(l_array))
             # Inserts in airport dict curfews
             if l_array[0] == 'A':
                 self.airport[l_array[1]] = Airport(hour_to_min(l_array[2]), hour_to_min(l_array[3]))
@@ -88,9 +90,11 @@ class ASARProblem(Problem):
             # Insert a leg
             elif l_array[0] == 'L':
                 leg_counter += 1
-                profit = {}
-                for i in range(4, len(l_array) - 1, 2):
+                profit = {} #declarar lá em cima?
+                print(len(l_array))
+                for i in range(4, len(l_array) - 1, 2): # range(3, len(l_array), 2)
                     profit[l_array[i]] = int(l_array[i + 1])
+                print("l_array: " + str(l_array))
                 self.airport[l_array[1]] = Leg(l_array[2], hour_to_min(l_array[3]), profit)
 
             else:
@@ -154,7 +158,6 @@ def hour_to_min(hours):  # hours in string
 
 def main():
     if len(sys.argv) > 1:
-
         asar = ASARProblem()
         print(asar.airport)
 
