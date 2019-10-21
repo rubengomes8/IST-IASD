@@ -109,6 +109,8 @@ class ASARProblem(Problem):
             for j in self.leg[i]:
                 print("Key:", i, " || ", j)
 
+        print(self.leg)
+
     def save(self, f, state):
         """saves a solution state s to file f"""
 
