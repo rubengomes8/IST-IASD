@@ -92,17 +92,22 @@ class ASARProblem(Problem):
                 profit = {}
                 for i in range(4, len(l_array) - 1, 2):
                     profit[l_array[i]] = int(l_array[i + 1])
-                self.leg[l_array[1]] = Leg(l_array[2], hour_to_min(l_array[3]), profit)
-                '''for i in self.leg:
-                    print("Key:",i, " || ", self.leg[i])'''
+                if l_array[1] in self.leg.keys():
+                    self.leg[l_array[1]].append(Leg(l_array[2], hour_to_min(l_array[3]), profit))
+                else:
+                    self.leg[l_array[1]] = []
+                    self.leg[l_array[1]].append(Leg(l_array[2], hour_to_min(l_array[3]), profit))
+
 
             else:
                 raise RuntimeError("Bad Format Error")
 
         # Construct the Problem
         self.initial = State(None, leg_counter)
+
         for i in self.leg:
-            print("Key:", i, " || ", self.leg[i])
+            for j in self.leg[i]:
+                print("Key:", i, " || ", j)
 
     def save(self, f, state):
         """saves a solution state s to file f"""
