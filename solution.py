@@ -1,6 +1,7 @@
 import sys
 from search import *
 from itertools import product
+import numpy
 
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
@@ -21,18 +22,54 @@ class ASARProblem(Problem):
 
         if state.aircraft_status is None:
             # Initial State, all of them !airports
-            action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
+            action = iter(list(p for p in product(list(self.airport), repeat=len(self.fleet))))
             print(action)
 
             return action
 
         else:
-            action = set()
-            # Not Initial State
-            for aircraft, status in state.aircraft_status.items():
-                raise NotImplementedError
 
-            return action
+            # Not Initial State
+            possible_values = []
+            possible_next_airports = set()
+            i = 0
+
+            for airplane, values in state.aircraft_status.items():
+                possible_values[i] = []
+                if values[0] == values[1]: #aeroporto de partida == aeroporto inicial
+                    possible_values[i].append(values[0])
+                for next_airport, leg, in state.remaining_legs[values[1]].items():
+                    # se o tempo permitir adiciona-se a leg
+                    minutes_arrival = values[3] + leg[0] #hora do avião + duração de voo
+                    print(next_airport)
+                    # se o aeroporto fechar antes do voo chegar não se pode adicionar nos possible values
+                    # se o aeroporto nao tiver aberto antes do voo chegar talvez se possa adicionar na mesma com um "SINAL"
+                    if values[3] is None:
+                        if values[4] == 1: #ficou no mesmo sítio
+                            break #???
+                            pass
+                        else:
+                            possible_values[i].append(next_airport)
+                            possible_next_airports.add(next_airport)
+                    else:
+                        if minutes_arrival > self.airport[next_airport][0] or minutes_arrival < self.airport[next_airport][1]:
+                            possible_values[i].append(next_airport)
+                            possible_next_airports.add(next_airport)
+                i += 1
+
+            print(possible_values)
+            combinations = list(p for p in product(list(possible_next_airports), repeat=len(self.fleet)))
+            for comb in combinations:
+                for j in range(len(self.fleet)):
+                    if comb[j] in possible_values[j]:
+                        pass
+                    else:
+                        combinations.remove(comb)
+
+            print(combinations)
+            #falta filtrar as combinações que repetem legs, sem legs disponíveis e retornar as actions que sobraram
+            #action = func(possible_values)
+            #return action
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
@@ -110,6 +147,8 @@ class ASARProblem(Problem):
 
         print(self.leg)
         #print(self.airport)
+        '''home_airport = numpy.zeros((len(self.fleet),), dtype=int)
+        print(home_airport)'''
 
         action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
 
@@ -127,7 +166,7 @@ class ASARProblem(Problem):
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-        self.aircraft_status = aircraft_status #dicionario. key: matricula, value:  (aeroporto, horas_de_saida)
+        self.aircraft_status = aircraft_status #dicionario. key: matricula, value:  (aeroporto_inicial, aeroporto_atual, horas_de saida_do aeroporto_anterior, horas_de_saida do aeroporto atual, rtb (return to base))
         self.remaining_legs = remaining_legs  #dicionario. key: DEP, value: (arr, flight_time, profit)
 
 
