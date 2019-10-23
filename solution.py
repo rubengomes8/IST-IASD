@@ -18,22 +18,21 @@ class ASARProblem(Problem):
         """ Return the actions that can be executed in the given state.
             This should return a set of possible actions for each aircraft.
             An action in this context is defined by a dictionary with actions for each aircraft"""
-        action = set()
+
         if state.aircraft_status is None:
             # Initial State, all of them !airports
-            action = set()
-            possible_states = list(p for p in product(list(self.airport), repeat=len(self.aircraft)))
-            dict_state = {}
+            action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
+            print(action)
 
-            # TODO:cobinatoria fdd nao me apetece pensar
-            raise NotImplementedError
+            return action
 
         else:
+            action = set()
             # Not Initial State
             for aircraft, status in state.aircraft_status.items():
                 raise NotImplementedError
 
-        return action
+            return action
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
@@ -105,11 +104,16 @@ class ASARProblem(Problem):
         # Construct the Problem
         self.initial = State(None, leg_counter)
 
-        for i in self.leg:
+        '''for i in self.leg:
             for j in self.leg[i]:
-                print("Key:", i, " || ", j)
+                print("Key:", i, " || ", j)'''
 
         print(self.leg)
+        #print(self.airport)
+
+        action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
+
+        print(action)
 
     def save(self, f, state):
         """saves a solution state s to file f"""
@@ -123,8 +127,8 @@ class ASARProblem(Problem):
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-        self.aircraft_status = aircraft_status
-        self.remaining_legs = remaining_legs
+        self.aircraft_status = aircraft_status #dicionario. key: matricula, value:  (aeroporto, horas_de_saida)
+        self.remaining_legs = remaining_legs  #dicionario. key: DEP, value: (arr, flight_time, profit)
 
 
 # Class containing information on an Airport
@@ -137,6 +141,10 @@ class Airport:
 
     def add_leg_to_airport(self, leg):
         self.legs.append(leg)
+
+    def __str__(self):
+        return "Open Time: %s || Close Time: %s\n" %(self.open, self.close)
+
 
 
 # Class containing information on a leg.
