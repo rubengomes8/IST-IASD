@@ -37,8 +37,14 @@ class ASARProblem(Problem):
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
             Action is assumed to be a valid action in the state """
+        new_aircraft_status = {}
+        i = 0
+        for reg, status in state.aircraft_status.items():
+            leg_data= state.remaining_legs[status[0]].pop([action[i]])
+            new_aircraft_status[reg] = (status[0], action[i], status[2]+leg_data[0]+self.aircraft[self.fleet[reg]])
         raise NotImplementedError
 
+        return State()
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
             state to self.goal or checks for state in self.goal if it is a
@@ -51,7 +57,7 @@ class ASARProblem(Problem):
 
         # Checks if aircraft base airport is the same as the current airport
         for aircraft in state.aircraft_status.values():
-            if aircraft['base'] != aircraft['cur']:
+            if aircraft[0] != aircraft[1]:
                 return False
 
         return True
@@ -92,21 +98,21 @@ class ASARProblem(Problem):
                 for i in range(4, len(l_array) - 1, 2):
                     profit[l_array[i]] = int(l_array[i + 1])
                 if l_array[1] in self.leg.keys():
-                    self.leg[l_array[1]].append(Leg(l_array[2], hour_to_min(l_array[3]), profit))
+                    self.leg[l_array[1]][l_array[2]] = (hour_to_min(l_array[3]), profit)
                 else:
-                    self.leg[l_array[1]] = []
-                    self.leg[l_array[1]].append(Leg(l_array[2], hour_to_min(l_array[3]), profit))
+                    self.leg[l_array[1]] = {}
+                    self.leg[l_array[1]][l_array[2]] = (hour_to_min(l_array[3]), profit)
 
 
             else:
                 raise RuntimeError("Bad Format Error")
 
         # Construct the Problem
-        self.initial = State(None, leg_counter)
+        self.initial = State(None, self.leg)
 
-        '''for i in self.leg:
+        for i in self.leg:
             for j in self.leg[i]:
-                print("Key:", i, " || ", j)'''
+                print("Key:", i, " || ", j)
 
         print(self.leg)
         #print(self.airport)
