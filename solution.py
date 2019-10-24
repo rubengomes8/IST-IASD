@@ -68,8 +68,16 @@ class ASARProblem(Problem):
 
             print(combinations)
             #falta filtrar as combinações que repetem legs, sem legs disponíveis e retornar as actions que sobraram
-            #action = func(possible_values)
-            #return action
+            for comb in combinations:
+                if len(comb) != len(set(comb)): # check arrival duplicates
+                    for i in range(len(comb) - 1):
+                        for j in range(i+1, len(comb) -1):
+                            if comb[i] == comb[j]: # then check if they have same departure
+                                #if has same departure remove the comb
+                                if state.aircraft_status[i][1] == state.aircraft_status[j][1]:
+                                    combinations.remove(comb)
+            print(combinations)
+            return combinations
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
