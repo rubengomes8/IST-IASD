@@ -1,6 +1,7 @@
 import sys
 from search import *
 from itertools import product
+import numpy
 
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
@@ -24,7 +25,7 @@ class ASARProblem(Problem):
         possible_actions = []
 
         for plane in self.fleet:
-            if state.aircraft_status[plane[0]] is None:
+            if state.aircraft_status[plane] is None:
                 for legs in self.leg.values():
                     for leg in legs:
                         if (airport[leg[1]][0] <= airport[leg[0]][1] + leg[2] <= airport[leg[1]][1]) and (
@@ -33,10 +34,10 @@ class ASARProblem(Problem):
             else:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
-                        if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and state.aircraft_status[plane[0]][2]< \
-                                self.airport[leg[0]][1] and state.aircraft_status[plane[0]][2] + leg[2] <=\
+                        if leg[0] == state.aircraft_status[plane][0][-1][1] and state.aircraft_status[plane[0]][2]< \
+                                self.airport[leg[0]][1] and state.aircraft_status[plane][2] + leg[2] <=\
                                 self.airport[leg[1]][1] :
-                            possible_actions.append((plane[0], leg))
+                            possible_actions.append((plane, leg))
 
         return (possible_actions)
 
@@ -47,13 +48,13 @@ class ASARProblem(Problem):
 
         '''hora abertura aeroporto de saida - duração do voo - hora abertura aeroporto chegada'''
         if state.aircraft_status[action[0]] is None:
-            if self.airport[action[1][0]][0]+ action[1][2]< self.airport[action[1][1]][0] :
+            if self.airport[action[1][0]][0] + action[1][2]< self.airport[action[1][1]][0] :
                 departure_time = self.airport[action[1][0]][0] + (self.airport[action[1][1]][0] - (self.airport[action[1][0]][0]+ action[1][2]))
                 next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
 
-                legcompleted=[]
-                aircraftstatus={}
-                new_remaining = state.remaining_legs
+                legcompleted = []
+                aircraftstatus = {}
+                new_remaining = copy.deepcopy(state.remaining_legs)
                 new_remaining[action[1][0]].remove(action[1])
 
                 legcompleted.append((action[1], departure_time))
@@ -63,9 +64,9 @@ class ASARProblem(Problem):
             departure_time = state.aircraft_status[action[0]][2]
             next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
 
-            legcompleted = state.aircraft_status[action[0]][0]
+            legcompleted = list(state.aircraft_status[action[0]][0])
             aircraftstatus = {}
-            new_remaining = state.remaining_legs
+            new_remaining = copy.deepcopy(state.remaining_legs)
             new_remaining[action[1][0]].remove(action[1])
 
             legcompleted.append((action[1], departure_time))
@@ -102,9 +103,18 @@ class ASARProblem(Problem):
 
     def heuristic(self, node):
         """h function is straight-line distance from a node's state to goal."""
-        state = node.state()
-        return len(state.remaining_legs)*self.max_profit - sum([max(l_prof[3].values()) for l_prof in state.remaining_legs])
+        state = node.state
+        #return len(state.remaining_legs)*self.max_profit - sum([max(l_prof3[2].values()) for l_prof3 in
+                                                                #[l_prof2 for l_prof2 in
+                                                                #[l_prof for l_prof in state.remaining_legs.values()]]])
+        profit = 0
+        if state is None:
+            return 0
+        for legs1 in state.remaining_legs.values():
+            for legs2 in legs1:
+                profit += max(legs2[3].values())
 
+        return len(state.remaining_legs) * self.max_profit - profit
     def load(self, f):
         """Loads a problem from file f"""
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
@@ -143,8 +153,8 @@ class ASARProblem(Problem):
         print(self.fleet)
 
         # Construct the Problem
-        initial = State({aircraft: None for aircraft in self.fleet}, self.leg)
-        self.initial = State(initial, self.leg)
+        initial = State({aircraft: None for aircraft in self.fleet}, copy.deepcopy(self.leg))
+        self.initial = initial
 
     def save(self, f, state):
         """saves a solution state s to file f"""
@@ -210,7 +220,7 @@ def main():
             asar.load(f)
             f.close()
 
-        sol_node = astar_search(asar, h=None)  # astar_search return a Node
+        sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
         with open("solution.txt", 'w') as f:
             asar.save(f, sol_node)
