@@ -14,6 +14,7 @@ class ASARProblem(Problem):
     def __init__(self):
         Problem.__init__(self, None, None)
         self.max_profit = 0
+        self.leg_counter = 0
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
@@ -85,7 +86,7 @@ class ASARProblem(Problem):
 
         # Checks if aircraft base airport is the same as the current airport
         for aircraft in state.aircraft_status.values():
-            if aircraft[0] != aircraft[1]:
+            if aircraft[0][0][0][0] != aircraft[0][-1][0][1]:
                 return False
 
         return True
@@ -96,20 +97,15 @@ class ASARProblem(Problem):
         is such that the path doesn't matter, this function will only look at
         state2.  If the path does matter, it will consider c and maybe state1
         and action. The default method costs 1 for every step in the path."""
-        return cost_so_far + self.max_profit - action[1][2]  # check action structure
+        return cost_so_far + self.max_profit - action[1][3][self.fleet[action[0]]]  # check action structure
 
-    def value(self, state):
-        """For optimization problems, each state has a value. Hill-climbing
-        and related algorithms try to maximize this value."""
-        raise NotImplementedError
-
-    def heuristic(self, state):
+    def heuristic(self, node):
         """h function is straight-line distance from a node's state to goal."""
-        raise NotImplementedError
+        state = node.state()
+        return len(state.remaining_legs)*self.max_profit - sum([max(l_prof[3].values()) for l_prof in state.remaining_legs])
 
     def load(self, f):
         """Loads a problem from file f"""
-        leg_counter = 0
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
             l_array = ln.split()
             # Inserts in airport dict curfews
@@ -126,7 +122,7 @@ class ASARProblem(Problem):
 
             # Insert a leg
             elif l_array[0] == 'L':
-                leg_counter += 1
+                self.leg_counter += 1
                 profit = {}
                 for i in range(4, len(l_array) - 1, 2):
                     leg_profit = int(l_array[i + 1])
@@ -145,14 +141,9 @@ class ASARProblem(Problem):
         print(self.aircraft)
         print(self.fleet)
 
-
-
-
-
-
         # Construct the Problem
-        self.initial = State(None, self.leg)
-
+        initial = State({aircraft: None for aircraft in self.fleet}, self.leg)
+        self.initial = State(initial, self.leg)
 
     def save(self, f, state):
         """saves a solution state s to file f"""
@@ -161,9 +152,17 @@ class ASARProblem(Problem):
             f.write("Infeasible.")
             return
         else:
-            for aircraft in state.aircraft_status.values():
-                pass
+            state_c = state.state()
+            for aircraft, path in state_c.aircraft_status.items():
 
+                schedule = ["S", aircraft]
+                for flights in iter(path[0]):
+                    schedule.append(min_to_hour(flights[1]))
+                    schedule.append(flights[2][0])
+                    schedule.append(flights[2][1])
+
+                f.write(*schedule)
+                f.write("P " + (self.max_profit*self.leg_counter - state.path_cost))
 
 
 class State:
@@ -204,20 +203,20 @@ def hour_to_min(hours):  # hours in string
 def main():
     if len(sys.argv) > 1:
         asar = ASARProblem()
-        #print(asar.airport)
+        print(asar.airport)
 
         with open(sys.argv[1],'r') as f:
             asar.load(f)
             f.close()
-'''
+
         sol_node = astar_search(asar, h=None)  # astar_search return a Node
 
         with open("solution.txt", 'w') as f:
-            asar.save(f, sol_node.state())
+            asar.save(f, sol_node)
             f.close()
     else:
         print("Usage:", sys.argv[0], "<filename>")
-'''
+
 
 if __name__ == '__main__':
     main()
