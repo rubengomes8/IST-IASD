@@ -24,17 +24,18 @@ class ASARProblem(Problem):
 
         for plane in self.fleet:
             if state.aircraft_status[plane] is None:
-                for legs in self.leg.values():
+                for legs in state.remaining_legs.values():
                     for leg in legs:
-                            possible_actions.append((plane, leg))
+                        #if (self.airport[leg[1]][0] <= self.airport[leg[0]][1] + leg[2] <= self.airport[leg[1]][1]) and (
+                              #  self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
+                        possible_actions.append((plane, leg))
             else:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
-                        if leg[0] == state.aircraft_status[plane][0][-1][1] and state.aircraft_status[plane][2]< \
+                        if leg[0] == state.aircraft_status[plane][0][-1][0][1] and state.aircraft_status[plane][2] < \
                                 self.airport[leg[0]][1] and state.aircraft_status[plane][2] + leg[2] <=\
-                                self.airport[leg[1]][1] :
+                                self.airport[leg[1]][1]:
                             possible_actions.append((plane, leg))
-        print(len(possible_actions))
         return possible_actions
 
     def result(self, state, action):
@@ -44,37 +45,26 @@ class ASARProblem(Problem):
 
         '''hora abertura aeroporto de saida - duração do voo - hora abertura aeroporto chegada'''
         if state.aircraft_status[action[0]] is None:
-            if self.airport[action[1][0]][0] + action[1][2]< self.airport[action[1][1]][0] :
+            if self.airport[action[1][0]][0] + action[1][2] < self.airport[action[1][1]][0]:
                 departure_time = self.airport[action[1][0]][0] + (self.airport[action[1][1]][0] - (self.airport[action[1][0]][0]+ action[1][2]))
             else:
                 departure_time = self.airport[action[1][0]][0]
-
-            next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
             legcompleted = []
-            aircraftstatus = {}
-            new_remaining = copy.deepcopy(state.remaining_legs)
-            new_remaining[action[1][0]].remove(action[1])
-
-            legcompleted.append((action[1], departure_time))
-            aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
-            return State(aircraftstatus, new_remaining)
-
 
         else:
             departure_time = state.aircraft_status[action[0]][2]
-            next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
+            legcompleted = copy.deepcopy(state.aircraft_status[action[0]][0])
 
-            legcompleted = list(state.aircraft_status[action[0]][0])
-            aircraftstatus = {}
-            new_remaining = copy.deepcopy(state.remaining_legs)
-            new_remaining[action[1][0]].remove(action[1])
+        next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
 
-            legcompleted.append((action[1], departure_time))
-            aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
-            return State(aircraftstatus, new_remaining)
+        new_aircraftstatus = copy.deepcopy(state.aircraft_status)
 
+        new_remaining = copy.deepcopy(state.remaining_legs)
+        new_remaining[action[1][0]].remove(action[1])
 
-
+        legcompleted.append((action[1], departure_time))
+        new_aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
+        return State(new_aircraftstatus, new_remaining, state.leg_counter - 1)
 
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
@@ -83,7 +73,7 @@ class ASARProblem(Problem):
             checking against a single self.goal is not enough."""
 
         # There are still legs left to fly
-        if len(state.remaining_legs) > 0:
+        if state.leg_counter > 0:
             return False
 
         # Checks if aircraft base airport is the same as the current airport
@@ -112,7 +102,8 @@ class ASARProblem(Problem):
             for legs2 in legs1:
                 profit += max(legs2[3].values())
 
-        return len(state.remaining_legs) * self.max_profit - profit
+        #return len(state.remaining_legs) * self.max_profit - profit
+        return 0
     def load(self, f):
         """Loads a problem from file f"""
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
@@ -146,12 +137,9 @@ class ASARProblem(Problem):
 
             else:
                 raise RuntimeError("Bad Format Error")
-        print(self.airport)
-        print(self.aircraft)
-        print(self.fleet)
 
         # Construct the Problem
-        initial = State({aircraft: None for aircraft in self.fleet}, copy.deepcopy(self.leg))
+        initial = State({aircraft: None for aircraft in self.fleet}, copy.deepcopy(self.leg), self.leg_counter)
         self.initial = initial
 
     def save(self, f, state):
@@ -161,24 +149,29 @@ class ASARProblem(Problem):
             f.write("Infeasible.")
             return
         else:
-            state_c = state.state()
+            state_c = state.state
             for aircraft, path in state_c.aircraft_status.items():
 
-                schedule = ["S", aircraft]
+                schedule = ["S ", aircraft + " "]
                 for flights in iter(path[0]):
-                    schedule.append(min_to_hour(flights[1]))
-                    schedule.append(flights[2][0])
-                    schedule.append(flights[2][1])
+                    schedule.append(min_to_hour(flights[1]) + " ")
+                    schedule.append(flights[0][0] + " ")
+                    schedule.append(flights[0][1] + " ")
+                schedule[-1] = schedule[-1][:-1]
 
-                f.write(*schedule)
-                f.write("P " + (self.max_profit*self.leg_counter - state.path_cost))
+                [f.writelines(item) for item in schedule]
+                f.write("\nP " + str((self.max_profit*self.leg_counter - state.path_cost)))
 
 
 class State:
 
-    def __init__(self, aircraft_status, remaining_legs):
+    def __init__(self, aircraft_status, remaining_legs, leg_counter):
         self.aircraft_status = aircraft_status  #dict. key: reg, value: ( []of legs, SDT of base, SDT avail)
         self.remaining_legs = remaining_legs  #dict. key: DEP, value: (arr, flight_time, profit)
+        self.leg_counter = leg_counter
+
+    def __lt__(self, other):
+        return True
 
 
 # Class containing information on a leg.
@@ -212,7 +205,6 @@ def hour_to_min(hours):  # hours in string
 def main():
     if len(sys.argv) > 1:
         asar = ASARProblem()
-        print(asar.airport)
 
         with open(sys.argv[1],'r') as f:
             asar.load(f)
