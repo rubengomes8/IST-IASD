@@ -11,9 +11,9 @@ class ASARProblem(Problem):
     aircraft = {}
     fleet = []
 
-
     def __init__(self):
         Problem.__init__(self, None, None)
+        self.max_profit = 0
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
@@ -90,6 +90,8 @@ class ASARProblem(Problem):
         raise NotImplementedError
 
         return State()
+
+
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
             state to self.goal or checks for state in self.goal if it is a
@@ -108,11 +110,16 @@ class ASARProblem(Problem):
         return True
 
     def path_cost(self, cost_so_far, state1, action, state2):
-        raise NotImplementedError
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+        return cost_so_far + self.max_profit - action[1][2]  # check action structure
 
     def value(self, state):
-        """ Given state and action, return a new state that is the result of the action.
-        Action is assumed to be a valid action in the state """
+        """For optimization problems, each state has a value. Hill-climbing
+        and related algorithms try to maximize this value."""
         raise NotImplementedError
 
     def heuristic(self, state):
@@ -141,12 +148,15 @@ class ASARProblem(Problem):
                 leg_counter += 1
                 profit = {}
                 for i in range(4, len(l_array) - 1, 2):
-                    profit[l_array[i]] = int(l_array[i + 1])
+                    leg_profit = int(l_array[i + 1])
+                    profit[l_array[i]] = leg_profit
+                    if leg_profit > self.max_profit:
+                        self.max_profit = leg_profit
                 if l_array[1] in self.leg.keys():
-                    self.leg[l_array[1]][l_array[2]] = (hour_to_min(l_array[3]), profit)
+                    self.leg[l_array[1]].append((l_array[2], hour_to_min(l_array[3]), profit))
                 else:
-                    self.leg[l_array[1]] = {}
-                    self.leg[l_array[1]][l_array[2]] = (hour_to_min(l_array[3]), profit)
+                    self.leg[l_array[1]] = []
+                    self.leg[l_array[1]].append((l_array[2], hour_to_min(l_array[3]), profit))
 
 
             else:
@@ -171,16 +181,21 @@ class ASARProblem(Problem):
     def save(self, f, state):
         """saves a solution state s to file f"""
 
+        sol_node = astar_search(self, h=None) # astar_search return a Node
+
         # No solution was found
-        if state is None:
+        if sol_node is None:
             f.write("Infeasible")
             return
+        else:
+            for node in sol_node.solution():
+                state = node.state()
 
 
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-        self.aircraft_status = aircraft_status #dicionario. key: matricula, value:  (aeroporto_inicial, aeroporto_atual, horas_de saida_do aeroporto_anterior, horas_de_saida do aeroporto atual, rtb (return to base))
+        self.aircraft_status = aircraft_status  #dicionario. key: matricula, value:  (aeroporto_inicial, aeroporto_atual, horas_de_saida do aeroporto atual)
         self.remaining_legs = remaining_legs  #dicionario. key: DEP, value: (arr, flight_time, profit)
 
 
@@ -199,7 +214,6 @@ class Airport:
         return "Open Time: %s || Close Time: %s\n" %(self.open, self.close)
 
 
-
 # Class containing information on a leg.
 class Leg:
 
@@ -210,7 +224,6 @@ class Leg:
 
     def __str__(self):
         return "Arrival Airport: %s || Flight Time: %s || Profit: %s\n" % (self.arr, self.flight_time, self.profit)
-
 
     # Returns arrival airport, time of arrival and profit of given leg
     def calculate_route(self, a_class, std):
@@ -240,7 +253,6 @@ def main():
 
     else:
         print("Usage:", sys.argv[0], "<filename>")
-
 
 
 if __name__ == '__main__':
