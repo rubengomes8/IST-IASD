@@ -18,7 +18,8 @@ class ASARProblem(Problem):
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
             This should return a set of possible actions for each aircraft.
-            An action in this context is defined by a dictionary with actions for each aircraft"""
+            An action in this context is defined by a dictionary with actions for each aircraft
+            dict. key: reg, value: ([] of legs, SDT of base, SDT avail) """
 
         if state.aircraft_status is None:
             # Initial State, all of them !airports
@@ -81,7 +82,8 @@ class ASARProblem(Problem):
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
-            Action is assumed to be a valid action in the state """
+            Action is assumed to be a valid action in the state
+            dict. key: reg, value: ([] of legs, SDT of base, SDT avail) """
         new_aircraft_status = {}
         i = 0
         for reg, status in state.aircraft_status.items():
@@ -153,11 +155,10 @@ class ASARProblem(Problem):
                     if leg_profit > self.max_profit:
                         self.max_profit = leg_profit
                 if l_array[1] in self.leg.keys():
-                    self.leg[l_array[1]].append((l_array[2], hour_to_min(l_array[3]), profit))
+                    self.leg[l_array[1]].append((l_array[1], l_array[2], hour_to_min(l_array[3]), profit))
                 else:
                     self.leg[l_array[1]] = []
-                    self.leg[l_array[1]].append((l_array[2], hour_to_min(l_array[3]), profit))
-
+                    self.leg[l_array[1]].append((l_array[1], l_array[2], hour_to_min(l_array[3]), profit))
 
             else:
                 raise RuntimeError("Bad Format Error")
@@ -180,23 +181,21 @@ class ASARProblem(Problem):
 
     def save(self, f, state):
         """saves a solution state s to file f"""
-
-        sol_node = astar_search(self, h=None) # astar_search return a Node
-
         # No solution was found
-        if sol_node is None:
-            f.write("Infeasible")
+        if state is None:
+            f.write("Infeasible.")
             return
         else:
-            for node in sol_node.solution():
-                state = node.state()
+            for aircraft in state.aircraft_status.values():
+
+
 
 
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-        self.aircraft_status = aircraft_status  #dicionario. key: matricula, value:  (aeroporto_inicial, aeroporto_atual, horas_de_saida do aeroporto atual)
-        self.remaining_legs = remaining_legs  #dicionario. key: DEP, value: (arr, flight_time, profit)
+        self.aircraft_status = aircraft_status  #dict. key: reg, value: ([] of legs, SDT of base, SDT avail)
+        self.remaining_legs = remaining_legs  #dict. key: DEP, value: (arr, flight_time, profit)
 
 
 # Class containing information on an Airport
@@ -247,10 +246,15 @@ def main():
         asar = ASARProblem()
         print(asar.airport)
 
-        with open(sys.argv[1]) as f:
+        with open(sys.argv[1],'r') as f:
             asar.load(f)
             f.close()
 
+        sol_node = astar_search(asar, h=None)  # astar_search return a Node
+
+        with open("solution.txt", 'w') as f:
+            asar.save(f, sol_node.state())
+            f.close()
     else:
         print("Usage:", sys.argv[0], "<filename>")
 
