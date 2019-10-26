@@ -21,64 +21,16 @@ class ASARProblem(Problem):
             An action in this context is defined by a dictionary with actions for each aircraft
             dict. key: reg, value: ([] of legs, SDT of base, SDT avail) """
 
-        if state.aircraft_status is None:
-            # Initial State, all of them !airports
-            action = iter(list(p for p in product(list(self.airport), repeat=len(self.fleet))))
-            print(action)
+        possible_actions = []
 
-            return action
+        for plane in self.fleet:
+            if state.aircraft_status[plane[0]] is None:
+                for legs in self.leg.values():
+                    for leg in legs:
+                        possible_actions.append((plane[0], leg))
+            else:
+                pass
 
-        else:
-
-            # Not Initial State
-            possible_values = []
-            possible_next_airports = set()
-            i = 0
-
-            for airplane, values in state.aircraft_status.items():
-                possible_values[i] = []
-                if values[0] == values[1]: #aeroporto de partida == aeroporto inicial
-                    possible_values[i].append(values[0])
-                for next_airport, leg, in state.remaining_legs[values[1]].items():
-                    # se o tempo permitir adiciona-se a leg
-                    minutes_arrival = values[3] + leg[0] #hora do avião + duração de voo
-                    print(next_airport)
-                    # se o aeroporto fechar antes do voo chegar não se pode adicionar nos possible values
-                    # se o aeroporto nao tiver aberto antes do voo chegar talvez se possa adicionar na mesma com um "SINAL"
-                    if values[3] is None:
-                        if values[4] == 1: #ficou no mesmo sítio
-                            break #???
-                            pass
-                        else:
-                            possible_values[i].append(next_airport)
-                            possible_next_airports.add(next_airport)
-                    else:
-                        if minutes_arrival > self.airport[next_airport][0] or minutes_arrival < self.airport[next_airport][1]:
-                            possible_values[i].append(next_airport)
-                            possible_next_airports.add(next_airport)
-                i += 1
-
-            print(possible_values)
-            combinations = list(p for p in product(list(possible_next_airports), repeat=len(self.fleet)))
-            for comb in combinations:
-                for j in range(len(self.fleet)):
-                    if comb[j] in possible_values[j]:
-                        pass
-                    else:
-                        combinations.remove(comb)
-
-            print(combinations)
-            #falta filtrar as combinações que repetem legs, sem legs disponíveis e retornar as actions que sobraram
-            for comb in combinations:
-                if len(comb) != len(set(comb)): # check arrival duplicates
-                    for i in range(len(comb) - 1):
-                        for j in range(i+1, len(comb) -1):
-                            if comb[i] == comb[j]: # then check if they have same departure
-                                #if has same departure remove the comb
-                                if state.aircraft_status[i][1] == state.aircraft_status[j][1]:
-                                    combinations.remove(comb)
-            print(combinations)
-            return combinations
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
@@ -135,7 +87,7 @@ class ASARProblem(Problem):
             l_array = ln.split()
             # Inserts in airport dict curfews
             if l_array[0] == 'A':
-                self.airport[l_array[1]] = Airport(hour_to_min(l_array[2]), hour_to_min(l_array[3]))
+                self.airport[l_array[1]] = (hour_to_min(l_array[2]), hour_to_min(l_array[3]))
 
             # Inserts in aircraft dict rotation times
             elif l_array[0] == 'C':
@@ -162,22 +114,27 @@ class ASARProblem(Problem):
 
             else:
                 raise RuntimeError("Bad Format Error")
+        print(self.airport['POR'][0])
+
+        possible_actions= []
+        for plane in self.fleet:
+
+            #else
+            for legs in state.remaining_legs.values():
+                for leg in legs:
+                    print(leg)
+                    if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and self.airport[leg[0]][1] > state.aircraft_status[plane[0]][2] and :
+                        possible_actions.append((plane[0], leg))
+        print(possible_actions)
+        print(len(possible_actions))
+
+
+
+
 
         # Construct the Problem
         self.initial = State(None, self.leg)
 
-        for i in self.leg:
-            for j in self.leg[i]:
-                print("Key:", i, " || ", j)
-
-        print(self.leg)
-        #print(self.airport)
-        '''home_airport = numpy.zeros((len(self.fleet),), dtype=int)
-        print(home_airport)'''
-
-        action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
-
-        print(action)
 
     def save(self, f, state):
         """saves a solution state s to file f"""
@@ -187,7 +144,7 @@ class ASARProblem(Problem):
             return
         else:
             for aircraft in state.aircraft_status.values():
-
+                pass
 
 
 
@@ -196,21 +153,6 @@ class State:
     def __init__(self, aircraft_status, remaining_legs):
         self.aircraft_status = aircraft_status  #dict. key: reg, value: ([] of legs, SDT of base, SDT avail)
         self.remaining_legs = remaining_legs  #dict. key: DEP, value: (arr, flight_time, profit)
-
-
-# Class containing information on an Airport
-class Airport:
-
-    def __init__(self, open_time, close_time):
-        self.open = open_time
-        self.close = close_time
-        self.legs = []
-
-    def add_leg_to_airport(self, leg):
-        self.legs.append(leg)
-
-    def __str__(self):
-        return "Open Time: %s || Close Time: %s\n" %(self.open, self.close)
 
 
 # Class containing information on a leg.
@@ -244,12 +186,12 @@ def hour_to_min(hours):  # hours in string
 def main():
     if len(sys.argv) > 1:
         asar = ASARProblem()
-        print(asar.airport)
+        #print(asar.airport)
 
         with open(sys.argv[1],'r') as f:
             asar.load(f)
             f.close()
-
+'''
         sol_node = astar_search(asar, h=None)  # astar_search return a Node
 
         with open("solution.txt", 'w') as f:
@@ -257,7 +199,7 @@ def main():
             f.close()
     else:
         print("Usage:", sys.argv[0], "<filename>")
-
+'''
 
 if __name__ == '__main__':
     main()
