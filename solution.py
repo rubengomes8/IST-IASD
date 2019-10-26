@@ -1,7 +1,6 @@
 import sys
 from search import *
 from itertools import product
-import numpy
 
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
@@ -20,7 +19,7 @@ class ASARProblem(Problem):
         """ Return the actions that can be executed in the given state.
             This should return a set of possible actions for each aircraft.
             An action in this context is defined by a dictionary with actions for each aircraft
-            dict. key: reg, value: ([] of legs, SDT of base, SDT avail) """
+            dict. key: reg, value: ([] of (leg, SDT), SDT of base, SDT avail) """
 
         possible_actions = []
 
@@ -28,7 +27,9 @@ class ASARProblem(Problem):
             if state.aircraft_status[plane[0]] is None:
                 for legs in self.leg.values():
                     for leg in legs:
-                        possible_actions.append((plane[0], leg))
+                        if (airport[leg[1]][0] <= airport[leg[0]][1] + leg[2] <= airport[leg[1]][1]) and (
+                                airport[leg[1]][0] <= airport[leg[0]][0] + leg[2] <= airport[leg[1]][1]):
+                            possible_actions.append((plane[0], leg))
             else:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
@@ -55,7 +56,7 @@ class ASARProblem(Problem):
                 new_remaining = state.remaining_legs
                 new_remaining[action[1][0]].remove(action[1])
 
-                legcompleted.append(action[1])
+                legcompleted.append((action[1], departure_time))
                 aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
                 return State(aircraftstatus, new_remaining)
         else:
@@ -67,7 +68,7 @@ class ASARProblem(Problem):
             new_remaining = state.remaining_legs
             new_remaining[action[1][0]].remove(action[1])
 
-            legcompleted.append(action[1])
+            legcompleted.append((action[1], departure_time))
             aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
             return State(aircraftstatus, new_remaining)
 
