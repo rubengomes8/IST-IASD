@@ -123,7 +123,7 @@ class ASARProblem(Problem):
             for legs in state.remaining_legs.values():
                 for leg in legs:
                     print(leg)
-                    if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and self.airport[leg[0]][1] > state.aircraft_status[plane[0]][2] and :
+                    if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and self.airport[leg[0]][1] > state.aircraft_status[plane[0]][2] and self.airport[leg[1]][1] > state.aircraft_status[plane[0]][2] + leg[2]:
                         possible_actions.append((plane[0], leg))
         print(possible_actions)
         print(len(possible_actions))
