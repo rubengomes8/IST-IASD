@@ -14,6 +14,7 @@ class ASARProblem(Problem):
     def __init__(self):
         Problem.__init__(self, None, None)
         self.max_profit = 0
+        self.leg_counter = 0
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
@@ -130,7 +131,6 @@ class ASARProblem(Problem):
 
     def load(self, f):
         """Loads a problem from file f"""
-        leg_counter = 0
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
             l_array = ln.split()
             # Inserts in airport dict curfews
@@ -147,7 +147,7 @@ class ASARProblem(Problem):
 
             # Insert a leg
             elif l_array[0] == 'L':
-                leg_counter += 1
+                self.leg_counter += 1
                 profit = {}
                 for i in range(4, len(l_array) - 1, 2):
                     leg_profit = int(l_array[i + 1])
@@ -164,20 +164,18 @@ class ASARProblem(Problem):
                 raise RuntimeError("Bad Format Error")
 
         # Construct the Problem
-        self.initial = State(None, self.leg)
+        initial = State({aircraft: None for aircraft in self.fleet}, self.leg)
+        self.initial = State(initial, self.leg)
 
-        for i in self.leg:
+        """for i in self.leg:
             for j in self.leg[i]:
                 print("Key:", i, " || ", j)
-
         print(self.leg)
         #print(self.airport)
-        '''home_airport = numpy.zeros((len(self.fleet),), dtype=int)
-        print(home_airport)'''
-
+        home_airport = numpy.zeros((len(self.fleet),), dtype=int)
+        print(home_airport)
         action = set(p for p in product(list(self.airport), repeat=len(self.fleet)))
-
-        print(action)
+        print(action)"""
 
     def save(self, f, state):
         """saves a solution state s to file f"""
@@ -186,9 +184,17 @@ class ASARProblem(Problem):
             f.write("Infeasible.")
             return
         else:
-            for aircraft in state.aircraft_status.values():
+            state_c = state.state()
+            for aircraft, path in state_c.aircraft_status.items():
 
+                schedule = ["S", aircraft]
+                for flights in iter(path[0]):
+                    schedule.append(min_to_hour(flights[1]))
+                    schedule.append(flights[2][0])
+                    schedule.append(flights[2][1])
 
+                f.write(*schedule)
+                f.write("P " + (self.max_profit*self.leg_counter - state.path_cost))
 
 
 class State:
@@ -253,7 +259,7 @@ def main():
         sol_node = astar_search(asar, h=None)  # astar_search return a Node
 
         with open("solution.txt", 'w') as f:
-            asar.save(f, sol_node.state())
+            asar.save(f, sol_node)
             f.close()
     else:
         print("Usage:", sys.argv[0], "<filename>")
