@@ -1,7 +1,5 @@
-import sys
 from search import *
-from itertools import product
-import numpy
+import copy
 
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
@@ -28,8 +26,8 @@ class ASARProblem(Problem):
             if state.aircraft_status[plane] is None:
                 for legs in self.leg.values():
                     for leg in legs:
-                        if (airport[leg[1]][0] <= airport[leg[0]][1] + leg[2] <= airport[leg[1]][1]) and (
-                                airport[leg[1]][0] <= airport[leg[0]][0] + leg[2] <= airport[leg[1]][1]):
+                        if (self.airport[leg[1]][0] <= self.airport[leg[0]][1] + leg[2] <= self.airport[leg[1]][1]) and (
+                                self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
                             possible_actions.append((plane[0], leg))
             else:
                 for legs in state.remaining_legs.values():
