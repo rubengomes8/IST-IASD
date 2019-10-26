@@ -106,8 +106,6 @@ class ASARProblem(Problem):
                                                                 #[l_prof2 for l_prof2 in
                                                                 #[l_prof for l_prof in state.remaining_legs.values()]]])
         profit = 0
-        if state is None:
-            return 0
         for legs1 in state.remaining_legs.values():
             for legs2 in legs1:
                 profit += max(legs2[3].values())
