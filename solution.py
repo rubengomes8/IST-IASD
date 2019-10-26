@@ -26,18 +26,16 @@ class ASARProblem(Problem):
             if state.aircraft_status[plane] is None:
                 for legs in self.leg.values():
                     for leg in legs:
-                        if (self.airport[leg[1]][0] <= self.airport[leg[0]][1] + leg[2] <= self.airport[leg[1]][1]) and (
-                                self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
-                            possible_actions.append((plane[0], leg))
+                            possible_actions.append((plane, leg))
             else:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
-                        if leg[0] == state.aircraft_status[plane][0][-1][1] and state.aircraft_status[plane[0]][2]< \
+                        if leg[0] == state.aircraft_status[plane][0][-1][1] and state.aircraft_status[plane][2]< \
                                 self.airport[leg[0]][1] and state.aircraft_status[plane][2] + leg[2] <=\
                                 self.airport[leg[1]][1] :
                             possible_actions.append((plane, leg))
-
-        return (possible_actions)
+        print(len(possible_actions))
+        return possible_actions
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
@@ -48,16 +46,20 @@ class ASARProblem(Problem):
         if state.aircraft_status[action[0]] is None:
             if self.airport[action[1][0]][0] + action[1][2]< self.airport[action[1][1]][0] :
                 departure_time = self.airport[action[1][0]][0] + (self.airport[action[1][1]][0] - (self.airport[action[1][0]][0]+ action[1][2]))
-                next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
+            else:
+                departure_time = self.airport[action[1][0]][0]
 
-                legcompleted = []
-                aircraftstatus = {}
-                new_remaining = copy.deepcopy(state.remaining_legs)
-                new_remaining[action[1][0]].remove(action[1])
+            next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
+            legcompleted = []
+            aircraftstatus = {}
+            new_remaining = copy.deepcopy(state.remaining_legs)
+            new_remaining[action[1][0]].remove(action[1])
 
-                legcompleted.append((action[1], departure_time))
-                aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
-                return State(aircraftstatus, new_remaining)
+            legcompleted.append((action[1], departure_time))
+            aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
+            return State(aircraftstatus, new_remaining)
+
+
         else:
             departure_time = state.aircraft_status[action[0]][2]
             next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
