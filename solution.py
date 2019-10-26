@@ -9,7 +9,7 @@ class ASARProblem(Problem):
     airport = {}
     leg = {}
     aircraft = {}
-    fleet = []
+    fleet = {}
 
     def __init__(self):
         Problem.__init__(self, None, None)
@@ -29,21 +29,48 @@ class ASARProblem(Problem):
                     for leg in legs:
                         possible_actions.append((plane[0], leg))
             else:
-                pass
+                for legs in state.remaining_legs.values():
+                    for leg in legs:
+                        if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and state.aircraft_status[plane[0]][2]< \
+                                self.airport[leg[0]][1] and state.aircraft_status[plane[0]][2] + leg[2] <=\
+                                self.airport[leg[1]][1] :
+                            possible_actions.append((plane[0], leg))
 
+        return (possible_actions)
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
             Action is assumed to be a valid action in the state
             dict. key: reg, value: ([] of legs, SDT of base, SDT avail) """
-        new_aircraft_status = {}
-        i = 0
-        for reg, status in state.aircraft_status.items():
-            leg_data= state.remaining_legs[status[0]].pop([action[i]])
-            new_aircraft_status[reg] = (status[0], action[i], status[2]+leg_data[0]+self.aircraft[self.fleet[reg]])
-        raise NotImplementedError
 
-        return State()
+        '''hora abertura aeroporto de saida - duração do voo - hora abertura aeroporto chegada'''
+        if state.aircraft_status[action[0]] is None:
+            if self.airport[action[1][0]][0]+ action[1][2]< self.airport[action[1][1]][0] :
+                departure_time = self.airport[action[1][0]][0] + (self.airport[action[1][1]][0] - (self.airport[action[1][0]][0]+ action[1][2]))
+                next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
+
+                legcompleted=[]
+                aircraftstatus={}
+                new_remaining = state.remaining_legs
+                new_remaining[action[1][0]].remove(action[1])
+
+                legcompleted.append(action[1])
+                aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
+                return State(aircraftstatus, new_remaining)
+        else:
+            departure_time = state.aircraft_status[action[0]][2]
+            next_possible_time = departure_time + action[1][2] + self.aircraft[self.fleet[action[0]]]
+
+            legcompleted = state.aircraft_status[action[0]][0]
+            aircraftstatus = {}
+            new_remaining = state.remaining_legs
+            new_remaining[action[1][0]].remove(action[1])
+
+            legcompleted.append(action[1])
+            aircraftstatus[action[0]] = (legcompleted, departure_time, next_possible_time)
+            return State(aircraftstatus, new_remaining)
+
+
 
 
     def goal_test(self, state):
@@ -91,11 +118,11 @@ class ASARProblem(Problem):
 
             # Inserts in aircraft dict rotation times
             elif l_array[0] == 'C':
-                self.aircraft[l_array[1]] = l_array[2]
+                self.aircraft[l_array[1]] = hour_to_min(l_array[2])
 
             # Inserts a plane in the fleet (reg, class)
             elif l_array[0] == 'P':
-                self.fleet.append((l_array[1], l_array[2]))
+                self.fleet[l_array[1]]= l_array[2]
 
             # Insert a leg
             elif l_array[0] == 'L':
@@ -114,19 +141,10 @@ class ASARProblem(Problem):
 
             else:
                 raise RuntimeError("Bad Format Error")
-        print(self.airport['POR'][0])
+        print(self.airport)
+        print(self.aircraft)
+        print(self.fleet)
 
-        possible_actions= []
-        for plane in self.fleet:
-
-            #else
-            for legs in state.remaining_legs.values():
-                for leg in legs:
-                    print(leg)
-                    if leg[0] == state.aircraft_status[plane[0]][0][-1][1] and self.airport[leg[0]][1] > state.aircraft_status[plane[0]][2] and self.airport[leg[1]][1] > state.aircraft_status[plane[0]][2] + leg[2]:
-                        possible_actions.append((plane[0], leg))
-        print(possible_actions)
-        print(len(possible_actions))
 
 
 
@@ -151,7 +169,7 @@ class ASARProblem(Problem):
 class State:
 
     def __init__(self, aircraft_status, remaining_legs):
-        self.aircraft_status = aircraft_status  #dict. key: reg, value: ([] of legs, SDT of base, SDT avail)
+        self.aircraft_status = aircraft_status  #dict. key: reg, value: ( []of legs, SDT of base, SDT avail)
         self.remaining_legs = remaining_legs  #dict. key: DEP, value: (arr, flight_time, profit)
 
 
