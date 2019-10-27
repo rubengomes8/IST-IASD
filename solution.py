@@ -154,13 +154,15 @@ class ASARProblem(Problem):
 
                 schedule = ["S ", aircraft + " "]
                 for flights in iter(path[0]):
+                    print(flights[1])
                     schedule.append(min_to_hour(flights[1]) + " ")
                     schedule.append(flights[0][0] + " ")
                     schedule.append(flights[0][1] + " ")
                 schedule[-1] = schedule[-1][:-1]
 
                 [f.writelines(item) for item in schedule]
-                f.write("\nP " + str((self.max_profit*self.leg_counter - state.path_cost)))
+                f.write("\n")
+            f.write("P " + str((self.max_profit*self.leg_counter - state.path_cost)))
 
 
 class State:
@@ -193,7 +195,16 @@ class Leg:
 # Auxiliary Time functions
 
 def min_to_hour(minute):
-    return str(minute / 60 + minute % 60)
+    fullhours=minute//60
+    fullminutes=minute%60
+    if fullhours < 10 :
+        fullhours="0"+str(fullhours)
+    if fullminutes < 10:
+        fullminutes="0"+str(fullminutes)
+
+
+
+    return str(fullhours)+str(fullminutes)
 
 
 def hour_to_min(hours):  # hours in string
