@@ -32,14 +32,10 @@ class ASARProblem(Problem):
                               #  self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
                         possible_actions.append(Action(plane, leg))
             else:
-                for legs in state.remaining_legs.values():
-                    for leg in legs:
-                        # Add leg if dep of leg is same of arr of aircraft and aircraft can leave before
-                        # closing and aircraft can arrive before closing
-                        if leg.dep == state.aircraft_status[plane].legs[-1][0].arr \
-                                and state.aircraft_status[plane].sdt_avail + leg.flight_time < self.airport[leg.dep].close_t \
+                for leg in state.remaining_legs[state.aircraft_status[plane].legs[-1][0].arr]:
+                    if state.aircraft_status[plane].sdt_avail <= self.airport[leg.dep].close_t \
                                 and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t:
-                            possible_actions.append(Action(plane, leg))
+                        possible_actions.append(Action(plane, leg))
         return iter(possible_actions)
 
     def result(self, state, action):
@@ -99,7 +95,8 @@ class ASARProblem(Problem):
             will check the profit obtain from flying the leg taking into account the
             aircraft class. The cost of flying a leg is the max_profit - leg_profit
             which is always > 0."""
-        return cost_so_far + self.max_profit - action.leg.get_profit(self.fleet[action.aircraft_reg])
+        #return cost_so_far + self.max_profit - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
+        return cost_so_far - action.leg.get_profit(self.fleet[action.aircraft_reg])
 
     def heuristic(self, node):
         """h function is straight-line distance from a node's state to goal.
@@ -113,7 +110,8 @@ class ASARProblem(Problem):
             for legs2 in legs1:
                 profit += max(legs2.profit.values())
 
-        return len(state.remaining_legs) * self.max_profit - profit
+        #return (len(state.remaining_legs) + 1) * self.max_profit - profit
+        return 0
 
     def load(self, f):
         """Loads a problem from file f"""
@@ -172,8 +170,8 @@ class ASARProblem(Problem):
 
                     [f.writelines(item) for item in schedule]
                     f.write("\n")
-            f.write("P " + str((self.max_profit*self.leg_counter - state.path_cost)))
-
+            #f.write("P " + str(((self.max_profit + 1)*self.leg_counter - state.path_cost)))
+            f.write("P " + str(- state.path_cost))
 
 class Action:
 
@@ -280,6 +278,7 @@ def main():
         with open("solution.txt", 'w') as f:
             asar.save(f, sol_node)
             f.close()
+        print(asar.max_profit)
     else:
         print("Usage:", sys.argv[0], "<filename>")
 
