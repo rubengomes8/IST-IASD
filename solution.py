@@ -52,7 +52,7 @@ class ASARProblem(Problem):
         if state.aircraft_status[action.aircraft_reg] is None:
             # if the arr airport is still closed if we leave at opening time at dep
             if self.airport[action.leg.dep].open_t + action.leg.flight_time < self.airport[action.leg.arr].open_t:
-                departure_time = self.airport[action.leg.dep].open_t - action.leg.flight_time
+                departure_time = self.airport[action.leg.arr].open_t - action.leg.flight_time
             else:
                 departure_time = self.airport[action.leg.dep].open_t
             leg_completed = []
@@ -105,9 +105,15 @@ class ASARProblem(Problem):
         """h function is straight-line distance from a node's state to goal.
             In this case it will be flying all remaining legs with the class that yields
             best profit. This guarantees we do not overestimate cost. """
-        return 0
-        #state = node.state
-        #return len(state.remaining_legs) * self.max_profit
+        #return 0
+        state = node.state
+
+        profit = 0
+        for legs1 in state.remaining_legs.values():
+            for legs2 in legs1:
+                profit += max(legs2.profit.values())
+
+        return len(state.remaining_legs) * self.max_profit - profit
 
     def load(self, f):
         """Loads a problem from file f"""
@@ -187,7 +193,7 @@ class State:
         return True
 
     def __eq__(self, other):
-        if isinstance(other, Leg):
+        if isinstance(other, State):
             return self.__dict__ == other.__dict__
         return False
 
@@ -222,6 +228,11 @@ class AircraftStatus:
         self.legs = legs
         self.sdt_base = sdt_base
         self.sdt_avail = sdt_avail
+
+    def __eq__(self, other):
+        if isinstance(other, AircraftStatus):
+            return self.__dict__ == other.__dict__
+        return False
 
 
 class Airport:
