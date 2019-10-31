@@ -94,22 +94,16 @@ class ASARProblem(Problem):
         """Return the cost of a solution path that arrives at state2 from
             state1 via action, assuming cost c to get up to state1. In this case it
             will check the profit obtain from flying the leg taking into account the
-            aircraft class. The cost of flying a leg is the max_profit - leg_profit
+            aircraft class. The cost of flying a leg is the max_profit + 1 - leg_profit
             which is always > 0."""
-        return cost_so_far + self.max_profit - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
-        #return cost_so_far - action.leg.get_profit(self.fleet[action.aircraft_reg])
+        return cost_so_far + max(action.leg.profit.values()) - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
 
     def heuristic(self, node):
-        """h function is straight-line distance from a node's state to goal.
+        """h function is strlen(state.remaining_legs)aight-line distance from a node's state to goal.
             In this case it will be flying all remaining legs with the class that yields
             best profit. This guarantees we do not overestimate cost. """
         state = node.state
-        profit = 0
-        for legs1 in state.remaining_legs.values():
-            for legs2 in legs1:
-                profit += max(legs2.profit.values())
-
-        return (len(state.remaining_legs) + 1) * self.max_profit - profit
+        return sum([len(n) for n in state.remaining_legs.values()])
 
     def load(self, f):
         """Loads a problem from file f"""
@@ -134,8 +128,9 @@ class ASARProblem(Problem):
                 for i in range(4, len(l_array) - 1, 2):
                     leg_profit = int(l_array[i + 1])
                     profit[l_array[i]] = leg_profit
-                    if leg_profit > self.max_profit:
-                        self.max_profit = leg_profit
+                    #if leg_profit > self.max_profit:
+                    #    self.max_profit = leg_profit
+                self.max_profit += max(profit.values())
                 if l_array[1] in self.leg.keys():
                     self.leg[l_array[1]].append(Leg(l_array[1], l_array[2], hour_to_min(l_array[3]), profit))
                 else:
