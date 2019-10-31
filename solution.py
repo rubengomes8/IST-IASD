@@ -104,7 +104,6 @@ class ASARProblem(Problem):
             In this case it will be flying all remaining legs with the class that yields
             best profit. This guarantees we do not overestimate cost. """
         state = node.state
-
         profit = 0
         for legs1 in state.remaining_legs.values():
             for legs2 in legs1:
@@ -275,7 +274,10 @@ def main():
 
         print(asar.state_cnt)
         with open("solution.txt", 'w') as f:
-            asar.save(f, sol_node.state)
+            if sol_node is None:
+                asar.save(f, None)
+            else:
+                asar.save(f, sol_node.state)
             f.close()
     else:
         print("Usage:", sys.argv[0], "<filename>")
