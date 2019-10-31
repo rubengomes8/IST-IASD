@@ -1,19 +1,19 @@
 from search import *
 import copy
 
+
 class ASARProblem(Problem):
     """ Airline Scheduling And Routing """
-
-    airport = {}
-    leg = {}
-    aircraft = {}
-    fleet = {}
 
     def __init__(self):
         Problem.__init__(self, None, None)
         self.max_profit = 0
         self.leg_counter = 0
         self.state_cnt = 0
+        self.aircraft = {}
+        self.leg = {}
+        self.airport = {}
+        self.fleet = {}
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
@@ -69,8 +69,9 @@ class ASARProblem(Problem):
         # updates status of aircraft that has flown
         next_std_avail = departure_time + action.leg.flight_time + self.aircraft[self.fleet[action.aircraft_reg]]
         new_aircraft_status[action.aircraft_reg] = AircraftStatus(leg_completed, departure_time, next_std_avail)
+        new_profit = state.profit + action.leg.get_profit(self.fleet[action.aircraft_reg])
         self.state_cnt += 1
-        return State(new_aircraft_status, new_remaining, state.leg_counter - 1)
+        return State(new_aircraft_status, new_remaining, state.leg_counter - 1, new_profit)
 
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
@@ -95,14 +96,13 @@ class ASARProblem(Problem):
             will check the profit obtain from flying the leg taking into account the
             aircraft class. The cost of flying a leg is the max_profit - leg_profit
             which is always > 0."""
-        #return cost_so_far + self.max_profit - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
-        return cost_so_far - action.leg.get_profit(self.fleet[action.aircraft_reg])
+        return cost_so_far + self.max_profit - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
+        #return cost_so_far - action.leg.get_profit(self.fleet[action.aircraft_reg])
 
     def heuristic(self, node):
         """h function is straight-line distance from a node's state to goal.
             In this case it will be flying all remaining legs with the class that yields
             best profit. This guarantees we do not overestimate cost. """
-        #return 0
         state = node.state
 
         profit = 0
@@ -110,8 +110,7 @@ class ASARProblem(Problem):
             for legs2 in legs1:
                 profit += max(legs2.profit.values())
 
-        #return (len(state.remaining_legs) + 1) * self.max_profit - profit
-        return 0
+        return (len(state.remaining_legs) + 1) * self.max_profit - profit
 
     def load(self, f):
         """Loads a problem from file f"""
@@ -148,7 +147,7 @@ class ASARProblem(Problem):
                 raise RuntimeError("Bad Format Error")
 
         # Construct the Problem
-        initial = State({aircraft: None for aircraft in self.fleet}, self.leg, self.leg_counter)
+        initial = State({aircraft: None for aircraft in self.fleet}, self.leg, self.leg_counter, 0)
         self.initial = initial
 
     def save(self, f, state):
@@ -158,8 +157,7 @@ class ASARProblem(Problem):
             f.write("Infeasible.")
             return
         else:
-            state_c = state.state
-            for aircraft, path in state_c.aircraft_status.items():
+            for aircraft, path in state.aircraft_status.items():
                 if path is not None:
                     schedule = ["S ", aircraft + " "]
                     for flights in iter(path.legs):
@@ -170,8 +168,8 @@ class ASARProblem(Problem):
 
                     [f.writelines(item) for item in schedule]
                     f.write("\n")
-            #f.write("P " + str(((self.max_profit + 1)*self.leg_counter - state.path_cost)))
-            f.write("P " + str(- state.path_cost))
+            f.write("P " + str(state.profit))
+
 
 class Action:
 
@@ -182,10 +180,11 @@ class Action:
 
 class State:
 
-    def __init__(self, aircraft_status, remaining_legs, leg_counter):
+    def __init__(self, aircraft_status, remaining_legs, leg_counter,profit):
         self.aircraft_status = aircraft_status  #dict. key: reg, value: ( []of legs, SDT of base, SDT avail)
         self.remaining_legs = remaining_legs  #dict. key: DEP, value: (arr, flight_time, profit)
         self.leg_counter = leg_counter
+        self.profit = profit
 
     def __lt__(self, other):
         return True
@@ -276,9 +275,8 @@ def main():
 
         print(asar.state_cnt)
         with open("solution.txt", 'w') as f:
-            asar.save(f, sol_node)
+            asar.save(f, sol_node.state)
             f.close()
-        print(asar.max_profit)
     else:
         print("Usage:", sys.argv[0], "<filename>")
 
