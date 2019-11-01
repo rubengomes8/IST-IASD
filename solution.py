@@ -27,11 +27,15 @@ class ASARProblem(Problem):
             if state.aircraft_status[plane] is None:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
+                        if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t or self.airport[leg.dep].open_t + leg.flight_time + self.aircraft[self.fleet[plane]]> self.airport[leg.arr].close_t:
+                            return []
                         # add if leg can be done within airport curfews, need to check conditions
                         #if (self.airport[leg[1]][0] <= self.airport[leg[0]][1] + leg[2] <= self.airport[leg[1]][1]) and (
                               #  self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
                         possible_actions.append(Action(plane, leg))
             else:
+                if state.aircraft_status[plane].legs[-1][0].arr not in state.remaining_legs.keys():
+                    return []
                 for leg in state.remaining_legs[state.aircraft_status[plane].legs[-1][0].arr]:
                     if state.aircraft_status[plane].sdt_avail <= self.airport[leg.dep].close_t \
                                 and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t:
@@ -264,7 +268,6 @@ def main():
         with open(sys.argv[1], 'r') as f:
             asar.load(f)
             f.close()
-
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
         print(asar.state_cnt)
