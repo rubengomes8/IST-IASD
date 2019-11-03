@@ -34,11 +34,9 @@ class ASARProblem(Problem):
                               #  self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
                         possible_actions.append(Action(plane, leg))
             else:
-                if state.aircraft_status[plane].legs[-1][0].arr not in state.remaining_legs.keys():
-                    return []
                 for leg in state.remaining_legs[state.aircraft_status[plane].legs[-1][0].arr]:
                     if state.aircraft_status[plane].sdt_avail <= self.airport[leg.dep].close_t \
-                                and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t:
+                                and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t: #and state.aircraft_status[plane].sdt_avail + leg.flight_time  :
                         possible_actions.append(Action(plane, leg))
         return iter(possible_actions)
 
@@ -57,8 +55,11 @@ class ASARProblem(Problem):
                 departure_time = self.airport[action.leg.dep].open_t
             leg_completed = []
         else:
+            if state.aircraft_status[action.aircraft_reg].sdt_avail + action.leg.flight_time < self.airport[action.leg.arr].open_t:
+                departure_time = self.airport[action.leg.arr].open_t - action.leg.flight_time
+            else:
             # not an initial state
-            departure_time = state.aircraft_status[action.aircraft_reg].sdt_avail
+                departure_time = state.aircraft_status[action.aircraft_reg].sdt_avail
             # prepares new pointer for following state
             leg_completed = copy.deepcopy(state.aircraft_status[action.aircraft_reg].legs)
 
