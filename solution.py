@@ -262,7 +262,6 @@ def main():
         with open(sys.argv[1], 'r') as f:
             asar.load(f)
             f.close()
-
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
         print(asar.state_cnt)
