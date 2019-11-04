@@ -19,6 +19,6 @@ The problem is solved using an instance of the A* Search algorithm applied to ou
 
 ### Does the A* algorithm guarantees the optimal solution? Justify.
 
-Yes. This is because our heurisitc algorithm ensures we are not overestimating the cost from the given state to the goal state, therefore making our heuristic admissible. With an admissible heurisitc, the A* Algorithm will never return a suboptimal solution.
+Yes. This is because our heurisitc algorithm ensures we are not overestimating the cost from the given state to the goal state, therefore making our heuristic admissible. In our case we make the heurisitc function equal to the optimal cost. With an admissible heurisitc, the A* Algorithm will never return a suboptimal solution.
 
 ### Determine the number of generated nodes, the depth of the solution, and the effective branching factor, for each one of the example files provided at the course webpage.
