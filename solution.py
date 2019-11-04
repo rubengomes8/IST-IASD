@@ -8,7 +8,6 @@ class ASARProblem(Problem):
     def __init__(self):
         Problem.__init__(self, None, None)
         self.leg_counter = 0
-        self.state_cnt = 0
         self.aircraft = {}
         self.leg = {}
         self.airport = {}
@@ -53,7 +52,10 @@ class ASARProblem(Problem):
             leg_completed = []
         else:
             # not an initial state
-            departure_time = state.aircraft_status[action.aircraft_reg].sdt_avail
+            if state.aircraft_status[action.aircraft_reg].sdt_avail + action.leg.flight_time < self.airport[action.leg.arr].open_t:
+                departure_time = self.airport[action.leg.arr].open_t - action.leg.flight_time
+            else:
+                departure_time = state.aircraft_status[action.aircraft_reg].sdt_avail
             # prepares new pointer for following state
             leg_completed = copy.deepcopy(state.aircraft_status[action.aircraft_reg].legs)
 
@@ -69,7 +71,6 @@ class ASARProblem(Problem):
         next_std_avail = departure_time + action.leg.flight_time + self.aircraft[self.fleet[action.aircraft_reg]]
         new_aircraft_status[action.aircraft_reg] = AircraftStatus(leg_completed, departure_time, next_std_avail)
         new_profit = state.profit + action.leg.get_profit(self.fleet[action.aircraft_reg])
-        self.state_cnt += 1
         return State(new_aircraft_status, new_remaining, state.leg_counter - 1, new_profit)
 
     def goal_test(self, state):
@@ -262,6 +263,7 @@ def main():
         with open(sys.argv[1], 'r') as f:
             asar.load(f)
             f.close()
+
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
         print(asar.state_cnt)
