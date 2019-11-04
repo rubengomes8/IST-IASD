@@ -7,9 +7,7 @@ class ASARProblem(Problem):
 
     def __init__(self):
         Problem.__init__(self, None, None)
-        self.max_profit = 0
         self.leg_counter = 0
-        self.state_cnt = 0
         self.aircraft = {}
         self.leg = {}
         self.airport = {}
@@ -18,8 +16,8 @@ class ASARProblem(Problem):
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
             This should return a set of possible actions for each aircraft.
-            An action in this context is defined by a dictionary with actions for each aircraft
-            dict. key: reg, value: ([] of (leg, SDT), SDT of base, SDT avail) """
+            An action in this context is defined by a dictionary with actions
+            for each aircraft """
 
         possible_actions = []
 
@@ -27,25 +25,23 @@ class ASARProblem(Problem):
             if state.aircraft_status[plane] is None:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
-                        if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t or self.airport[leg.dep].open_t + leg.flight_time + self.aircraft[self.fleet[plane]]> self.airport[leg.arr].close_t:
+                        # add if leg can be done within airport curfews
+                        if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t  \
+                                or self.airport[leg.dep].open_t + leg.flight_time + self.aircraft[self.fleet[plane]] > self.airport[leg.arr].close_t:
                             return []
-                        # add if leg can be done within airport curfews, need to check conditions
-                        #if (self.airport[leg[1]][0] <= self.airport[leg[0]][1] + leg[2] <= self.airport[leg[1]][1]) and (
-                              #  self.airport[leg[1]][0] <= self.airport[leg[0]][0] + leg[2] <= self.airport[leg[1]][1]):
-                        possible_actions.append(Action(plane, leg))
+                        else:
+                            possible_actions.append(Action(plane, leg))
             else:
                 for leg in state.remaining_legs[state.aircraft_status[plane].legs[-1][0].arr]:
                     if state.aircraft_status[plane].sdt_avail <= self.airport[leg.dep].close_t \
-                                and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t: #and state.aircraft_status[plane].sdt_avail + leg.flight_time  :
+                                and state.aircraft_status[plane].sdt_avail + leg.flight_time <= self.airport[leg.arr].close_t:
                         possible_actions.append(Action(plane, leg))
         return iter(possible_actions)
 
     def result(self, state, action):
         """Given state and action, return a new state that is the result of the action.
-            Action is assumed to be a valid action in the state
-            dict. key: reg, value: ([] of (leg, sdt), SDT of base, SDT avail) """
+            Action is assumed to be a valid action in the state """
 
-        '''hora abertura aeroporto de saida - duração do voo - hora abertura aeroporto chegada'''
         # Initial state is empty, with children indicating different possible initial states
         if state.aircraft_status[action.aircraft_reg] is None:
             # if the arr airport is still closed if we leave at opening time at dep
@@ -55,10 +51,10 @@ class ASARProblem(Problem):
                 departure_time = self.airport[action.leg.dep].open_t
             leg_completed = []
         else:
+            # not an initial state
             if state.aircraft_status[action.aircraft_reg].sdt_avail + action.leg.flight_time < self.airport[action.leg.arr].open_t:
                 departure_time = self.airport[action.leg.arr].open_t - action.leg.flight_time
             else:
-            # not an initial state
                 departure_time = state.aircraft_status[action.aircraft_reg].sdt_avail
             # prepares new pointer for following state
             leg_completed = copy.deepcopy(state.aircraft_status[action.aircraft_reg].legs)
@@ -75,7 +71,6 @@ class ASARProblem(Problem):
         next_std_avail = departure_time + action.leg.flight_time + self.aircraft[self.fleet[action.aircraft_reg]]
         new_aircraft_status[action.aircraft_reg] = AircraftStatus(leg_completed, departure_time, next_std_avail)
         new_profit = state.profit + action.leg.get_profit(self.fleet[action.aircraft_reg])
-        self.state_cnt += 1
         return State(new_aircraft_status, new_remaining, state.leg_counter - 1, new_profit)
 
     def goal_test(self, state):
@@ -97,16 +92,18 @@ class ASARProblem(Problem):
 
     def path_cost(self, cost_so_far, state1, action, state2):
         """Return the cost of a solution path that arrives at state2 from
-            state1 via action, assuming cost c to get up to state1. In this case it
-            will check the profit obtain from flying the leg taking into account the
-            aircraft class. The cost of flying a leg is the max_profit + 1 - leg_profit
-            which is always > 0."""
+            state1 via action, assuming cost c to get up to state1. In this case
+            it will check the profit obtain from flying the leg taking into
+            account the aircraft class. The cost of flying a leg corresponds to 
+            the profit loss of flying that route with that particular plane. The
+            lowest cost possible is the number of legs, meaning the fleet flew
+            all legs with maximum profit."""
         return cost_so_far + max(action.leg.profit.values()) - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
 
     def heuristic(self, node):
-        """h function is strlen(state.remaining_legs)aight-line distance from a node's state to goal.
-            In this case it will be flying all remaining legs with the class that yields
-            best profit. This guarantees we do not overestimate cost. """
+        """h function estimates de cost from a node's state to goal.
+            In this case it will be flying all remaining legs with the class
+            that yields best profit. This guarantees we do not overestimate cost. """
         state = node.state
         return sum([len(n) for n in state.remaining_legs.values()])
 
@@ -133,9 +130,6 @@ class ASARProblem(Problem):
                 for i in range(4, len(l_array) - 1, 2):
                     leg_profit = int(l_array[i + 1])
                     profit[l_array[i]] = leg_profit
-                    #if leg_profit > self.max_profit:
-                    #    self.max_profit = leg_profit
-                self.max_profit += max(profit.values())
                 if l_array[1] in self.leg.keys():
                     self.leg[l_array[1]].append(Leg(l_array[1], l_array[2], hour_to_min(l_array[3]), profit))
                 else:
@@ -269,6 +263,7 @@ def main():
         with open(sys.argv[1], 'r') as f:
             asar.load(f)
             f.close()
+
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
         print(asar.state_cnt)
