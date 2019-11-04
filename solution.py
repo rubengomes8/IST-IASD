@@ -27,7 +27,7 @@ class ASARProblem(Problem):
                     for leg in legs:
                         # add if leg can be done within airport curfews
                         if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t  \
-                                or self.airport[leg.dep].open_t + leg.flight_time + self.aircraft[self.fleet[plane]] > self.airport[leg.arr].close_t:
+                                or self.airport[leg.dep].close_t + leg.flight_time <  or self.airport[leg.arr].open_t
                             return []
                         else:
                             possible_actions.append(Action(plane, leg))
