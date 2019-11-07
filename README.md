@@ -25,14 +25,18 @@ Yes. This is because our heuristic algorithm ensures we are not overestimating t
 
 ### Determine the number of generated nodes, the depth of the solution, and the effective branching factor, for each one of the example files provided at the course webpage.
 
-simple 1 - genereated nodes - 40 ; depth of solution: 6; 40 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶ -> x=1.574 ; 
-simple 2 - genereated nodes - 61 ; depth of solution: 8; 61 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.451; 
-simple 3 - genereated nodes - 26 ; depth of solution: 4; 26 = 1 + x + x² + x³ + x⁴ -> x=1.891; 
-simple 4 - genereated nodes - 47 ; depth of solution: 6; 47 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶ -> x=1.630; 
-simple 5 - genereated nodes - 69 ; depth of solution: 8; 69 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.480; 
-simple 6 - genereated nodes - 606 ; depth of solution: 6; 606 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶-> x=2.693; 
-simple 7 - genereated nodes - 540 ; depth of solution: 6; 540 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶ -> x=2.636 ; 
-simple 8 - genereated nodes - 105 ; depth of solution: 8; 105 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.582; 
+simple 1 - genereated nodes - 40 ; depth of solution: 6; 40 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶ -> x=1.574 ;
 
+simple 2 - genereated nodes - 61 ; depth of solution: 8; 61 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.451;
 
+simple 3 - genereated nodes - 26 ; depth of solution: 4; 26 = 1 + x + x² + x³ + x⁴ -> x=1.891;
 
+simple 4 - genereated nodes - 47 ; depth of solution: 6; 47 = 1 + x + x² + x³ + x⁴ + x⁵ + x⁶ -> x=1.630;
+
+simple 5 - genereated nodes - 69 ; depth of solution: 8; 69 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.480;
+
+simple 6 - genereated nodes - 606 ; depth of solution: 6; 606 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶-> x=2.693;
+
+simple 7 - genereated nodes - 540 ; depth of solution: 6; 540 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶ -> x=2.636 ;
+
+simple 8 - genereated nodes - 105 ; depth of solution: 8; 105 = 1 + x+ x² + x³ + x⁴ + x⁵ + x⁶+ x⁷+ x⁸ -> x=1.582;
