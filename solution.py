@@ -12,26 +12,27 @@ class ASARProblem(Problem):
         self.leg = {}
         self.airport = {}
         self.fleet = {}
-        self.counter = 0
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
             This should return a set of possible actions for each aircraft.
-            An action in this context is defined by a dictionary with actions
-            for each aircraft """
+            An action in this context is defined by a leg being flown by an
+            aircraft."""
 
         possible_actions = []
 
         for plane in self.fleet:
+            # Initial state
             if state.aircraft_status[plane] is None:
                 for legs in state.remaining_legs.values():
                     for leg in legs:
-                        # add if leg can be done within airport curfews
+                        # Check if leg can be done within airport curfews
                         if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t  \
                                 or self.airport[leg.dep].close_t + leg.flight_time < self.airport[leg.arr].open_t:
                             return []
                         else:
                             possible_actions.append(Action(plane, leg))
+            # Subsequent states
             else:
                 for leg in state.remaining_legs[state.aircraft_status[plane].legs[-1][0].arr]:
                     if state.aircraft_status[plane].sdt_avail <= self.airport[leg.dep].close_t \
@@ -72,14 +73,12 @@ class ASARProblem(Problem):
         next_std_avail = departure_time + action.leg.flight_time + self.aircraft[self.fleet[action.aircraft_reg]]
         new_aircraft_status[action.aircraft_reg] = AircraftStatus(leg_completed, departure_time, next_std_avail)
         new_profit = state.profit + action.leg.get_profit(self.fleet[action.aircraft_reg])
-        self.counter += 1
+        
         return State(new_aircraft_status, new_remaining, state.leg_counter - 1, new_profit)
 
     def goal_test(self, state):
-        """Return True if the state is a goal. The default method compares the
-            state to self.goal or checks for state in self.goal if it is a
-            list, as specified in the constructor. Override this method if
-            checking against a single self.goal is not enough."""
+        """Return True if the state is a goal. In this case if all airraft 
+            are in their respective base and all legs have been flown."""
         # There are still legs left to fly
         if state.leg_counter > 0:
             return False
@@ -98,17 +97,16 @@ class ASARProblem(Problem):
             it will check the profit obtain from flying the leg taking into
             account the aircraft class. The cost of flying a leg corresponds to 
             the profit loss of flying that route with that particular plane. The
-            lowest cost possible is the number of legs, meaning the fleet flew
-            all legs with maximum profit."""
+            lowest path cost possible is the number of legs, meaning the fleet 
+            flew all legs with maximum profit."""
         return cost_so_far + max(action.leg.profit.values()) - action.leg.get_profit(self.fleet[action.aircraft_reg]) + 1
 
     def heuristic(self, node):
         """h function estimates de cost from a node's state to goal.
             In this case it will be flying all remaining legs with the class
             that yields best profit. This guarantees we do not overestimate cost. """
-        state = node.state
-        return sum([len(n) for n in state.remaining_legs.values()])
-
+        return node.state.leg_counter
+        
     def load(self, f):
         """Loads a problem from file f"""
         for ln in (ln for ln in f.readlines() if len(ln.split()) > 0):
@@ -268,7 +266,7 @@ def main():
 
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
-        print(asar.counter)
+        #print(asar.state_cnt)
         with open("solution.txt", 'w') as f:
             if sol_node is None:
                 asar.save(f, None)
