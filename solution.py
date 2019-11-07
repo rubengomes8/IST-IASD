@@ -12,6 +12,7 @@ class ASARProblem(Problem):
         self.leg = {}
         self.airport = {}
         self.fleet = {}
+        self.counter = 0
 
     def actions(self, state):
         """ Return the actions that can be executed in the given state.
@@ -27,7 +28,7 @@ class ASARProblem(Problem):
                     for leg in legs:
                         # add if leg can be done within airport curfews
                         if self.airport[leg.dep].open_t + leg.flight_time > self.airport[leg.arr].close_t  \
-                                or self.airport[leg.dep].close_t + leg.flight_time <  or self.airport[leg.arr].open_t
+                                or self.airport[leg.dep].close_t + leg.flight_time < self.airport[leg.arr].open_t:
                             return []
                         else:
                             possible_actions.append(Action(plane, leg))
@@ -71,6 +72,7 @@ class ASARProblem(Problem):
         next_std_avail = departure_time + action.leg.flight_time + self.aircraft[self.fleet[action.aircraft_reg]]
         new_aircraft_status[action.aircraft_reg] = AircraftStatus(leg_completed, departure_time, next_std_avail)
         new_profit = state.profit + action.leg.get_profit(self.fleet[action.aircraft_reg])
+        self.counter += 1
         return State(new_aircraft_status, new_remaining, state.leg_counter - 1, new_profit)
 
     def goal_test(self, state):
@@ -128,7 +130,7 @@ class ASARProblem(Problem):
                 self.leg_counter += 1
                 profit = {}
                 for i in range(4, len(l_array) - 1, 2):
-                    leg_profit = int(l_array[i + 1])
+                    leg_profit = float(l_array[i + 1])
                     profit[l_array[i]] = leg_profit
                 if l_array[1] in self.leg.keys():
                     self.leg[l_array[1]].append(Leg(l_array[1], l_array[2], hour_to_min(l_array[3]), profit))
@@ -266,7 +268,7 @@ def main():
 
         sol_node = astar_search(asar, h=asar.heuristic)  # astar_search return a Node
 
-        print(asar.state_cnt)
+        print(asar.counter)
         with open("solution.txt", 'w') as f:
             if sol_node is None:
                 asar.save(f, None)
