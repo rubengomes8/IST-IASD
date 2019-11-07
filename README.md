@@ -13,7 +13,7 @@ The problem is solved using an instance of the A* Search algorithm applied to ou
 
 ### Describe the state representation and the operators.
 
-A state is characterized by the status of each aircraft(indexed by registration) that includes a list of legs flown, the departure time from the base airport and the available time for the next departure. It is also characterized by the profit obtained so fair and the number and the remaining legs to be flown. This is represented by a dictionary that is indexed by the departing airport and has as values the arrival airport, flight duration and profit. Given a state, all valid possibilities of flights for each aircraft are checked against the remaining legs, obtaining a set of valid actions to be performed, in this case, a single flight being flown by a single aircraft. The initial state of the problem is not unique, meaning multiple initial states exist(a state for each leg, for each aircraft), therefore the initial state is represented by a lack of aircraft status.
+A state is characterized by the status of each aircraft(indexed by registration) that includes a list of legs flown, the departure time from the base airport and the available time for the next departure. It is also characterized by the profit obtained so fair and the number and the remaining legs to be flown. This is represented by a dictionary that is indexed by the departing airport and has as values the arrival airport, flight duration and profit. Given a state, all valid possibilities of flights for each aircraft are checked against the remaining legs, obtaining a set of valid actions to be performed, in this case, a single flight being flown by a single aircraft.
 
 ### Describe the cost and the heuristic functions.
 
